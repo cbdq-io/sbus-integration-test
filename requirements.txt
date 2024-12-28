@@ -1,0 +1,5 @@
+kafka-python-ng==2.2.3
+lorem==0.1.1
+pathspec==0.12.1
+PyYAML==6.0.2
+yamllint==1.35.1
