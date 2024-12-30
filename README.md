@@ -25,6 +25,18 @@ Deploy the infrastructure:
 make deploy
 ```
 
+Capture the connection string for the Service Bus namespace:
+
+```shell
+export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform output -raw connection_string )
+```
+
+Start the Kafka Connect connector:
+
+```shell
+docker compose run --rm kccinit
+```
+
 Now generate some data to be injected into Kafka:
 
 ```shell

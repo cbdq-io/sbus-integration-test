@@ -1,7 +1,7 @@
 all: lint build
 
 build:
-	docker compose up -d kafka --wait
+	docker compose up -d connect --wait
 	terraform -chdir=terraform plan -out=tfplan
 
 clean:
