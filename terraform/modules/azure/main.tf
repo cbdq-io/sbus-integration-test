@@ -22,9 +22,10 @@ resource "azurerm_servicebus_namespace" "sbns" {
 resource "azurerm_servicebus_topic" "sbt_landing" {
   count = var.topic_count
 
-  name                 = "landing.topic.${count.index}"
-  namespace_id         = azurerm_servicebus_namespace.sbns.id
-  partitioning_enabled = true
+  name                          = "landing.topic.${count.index}"
+  namespace_id                  = azurerm_servicebus_namespace.sbns.id
+  max_message_size_in_kilobytes = null
+  partitioning_enabled          = true
 }
 
 resource "azurerm_servicebus_subscription" "sbts_landing" {
@@ -32,5 +33,21 @@ resource "azurerm_servicebus_subscription" "sbts_landing" {
 
   name               = "router"
   topic_id           = azurerm_servicebus_topic.sbt_landing[count.index].id
+  max_delivery_count = 1
+}
+
+resource "azurerm_servicebus_topic" "sbt" {
+  count = var.topic_count
+
+  name                 = "topic.${count.index}"
+  namespace_id         = azurerm_servicebus_namespace.sbns.id
+  partitioning_enabled = true
+}
+
+resource "azurerm_servicebus_subscription" "sbts" {
+  count = var.topic_count
+
+  name               = "client"
+  topic_id           = azurerm_servicebus_topic.sbt[count.index].id
   max_delivery_count = 1
 }
