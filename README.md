@@ -40,5 +40,11 @@ docker compose run --rm kccinit
 Now generate some data to be injected into Kafka:
 
 ```shell
-./data_gen.py -d
+./data_gen.py
+```
+
+When finished, run the following to nuke everything from orbit:
+
+```shell
+make clean
 ```
