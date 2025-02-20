@@ -48,3 +48,9 @@ When finished, run the following to nuke everything from orbit:
 ```shell
 make clean
 ```
+
+## Results
+
+| Version | Record Count | First Record | Last Record | Time (Minutes) | TPM (TPS) |
+| ------- | ------------ | ------------ | ----------- | -------------- | --------- |
+| [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2) | 128,000 | 18:13:54 | 19:01:31 | 48 | 2.6K (44.5) |
