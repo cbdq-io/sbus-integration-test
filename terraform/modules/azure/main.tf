@@ -1,4 +1,6 @@
 locals {
+  archive_topic = "landing.topic.0"
+
   location_abbreviation = {
     "UK South" = "uks",
     "UK West"  = "ukw"
@@ -36,6 +38,14 @@ resource "azurerm_servicebus_subscription" "sbts_landing" {
   max_delivery_count = 1
 }
 
+resource "azurerm_servicebus_subscription" "sbts_archivist" {
+  count = var.topic_count
+
+  name               = "archivist"
+  topic_id           = azurerm_servicebus_topic.sbt_landing[count.index].id
+  max_delivery_count = 1
+}
+
 resource "azurerm_servicebus_topic" "sbt" {
   count = var.topic_count
 
@@ -50,4 +60,18 @@ resource "azurerm_servicebus_subscription" "sbts" {
   name               = "client"
   topic_id           = azurerm_servicebus_topic.sbt[count.index].id
   max_delivery_count = 1
+}
+
+resource "azurerm_storage_account" "sa" {
+  name                     = format("%sarcsa", replace(local.resource_name_prefix, "-", ""))
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_replication_type = "LRS"
+  account_tier             = "Standard"
+}
+
+resource "azurerm_storage_container" "landing_archive" {
+  name                  = "landing-archive"
+  storage_account_id    = azurerm_storage_account.sa.id
+  container_access_type = "private"
 }
