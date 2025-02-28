@@ -91,25 +91,28 @@ resource "azurerm_service_plan" "app_service_plan" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
-  sku_name            = "B1"
+  sku_name            = "EP1"
 }
 
 resource "azurerm_linux_function_app" "archivist" {
-  name                 = "archivist${random_integer.numeric_suffix.result}"
-  service_plan_id      = azurerm_service_plan.app_service_plan.id
-  resource_group_name  = azurerm_resource_group.rg.name
-  location             = azurerm_resource_group.rg.location
-  storage_account_name = azurerm_storage_account.sa.name
+  name                       = "archivist${random_integer.numeric_suffix.result}"
+  service_plan_id            = azurerm_service_plan.app_service_plan.id
+  resource_group_name        = azurerm_resource_group.rg.name
+  location                   = azurerm_resource_group.rg.location
+  storage_account_name       = azurerm_storage_account.sa.name
+  storage_account_access_key = azurerm_storage_account.sa.primary_access_key
+
 
   app_settings = {
     "CONTAINER_NAME"                      = azurerm_storage_container.landing_archive.name
     "DOCKER_CUSTOM_IMAGE_NAME"            = "ghcr.io/cbdq-io/func-sbt-to-blob:latest"
     "FUNCTIONS_WORKER_RUNTIME"            = "python"
+    "LOG_LEVEL"                           = "DEBUG"
     "PATH_FORMAT"                         = "year=YYYY/month=MM/day=dd/hour=HH"
     "SERVICE_BUS_CONNECTION_STRING"       = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
     "STORAGE_ACCOUNT_CONNECTION_STRING"   = azurerm_storage_account.sa.primary_connection_string
     "SUBSCRIPTION_NAME"                   = "archivist"
-    "TIMER_SCHEDULE"                      = "0 */15 * * * *"
+    "TIMER_SCHEDULE"                      = "0 */5 * * * *"
     "TOPIC_NAME"                          = local.archive_topic
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
