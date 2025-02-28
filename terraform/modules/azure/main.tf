@@ -78,6 +78,20 @@ resource "azurerm_log_analytics_workspace" "log" {
   retention_in_days   = 30
 }
 
+resource "azurerm_monitor_diagnostic_setting" "sbns" {
+  name                       = "${local.resource_name_prefix}-sbns"
+  target_resource_id         = azurerm_servicebus_namespace.sbns.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.log.id
+
+  enabled_log {
+    category = "OperationalLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
+
 resource "azurerm_application_insights" "appi" {
   name                = "${local.resource_name_prefix}-appi"
   location            = azurerm_resource_group.rg.location
