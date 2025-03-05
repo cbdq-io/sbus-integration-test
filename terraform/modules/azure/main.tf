@@ -43,7 +43,7 @@ resource "azurerm_servicebus_subscription" "sbts_archivist" {
 resource "azurerm_servicebus_topic" "sbt" {
   count = var.topic_count
 
-  name                 = "topic.${count.index}"
+  name                 = "routed.topic.${count.index}"
   namespace_id         = azurerm_servicebus_namespace.sbns.id
   partitioning_enabled = true
 }
