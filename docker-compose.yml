@@ -52,6 +52,8 @@ services:
       - 9092:9092
 
   kccinit:
+    depends_on:
+      - router
     entrypoint: /usr/local/bin/kccinit.py
     environment:
       CONNECTOR_AzureServiceBusSink_AZURE_SERVICEBUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
@@ -67,3 +69,31 @@ services:
       KAFKA_CONNECT_ENDPOINT: "http://connect:8083"
       LOG_LEVEL: DEBUG
     image: ghcr.io/cbdq-io/kc-connectors:0.2.10
+
+  router:
+    container_name: router
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_RULE_GB_TOPIC_0: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.0", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.0"}'
+      ROUTER_RULE_IE_TOPIC_0: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.0", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.0"}'
+      ROUTER_RULE_GB_TOPIC_1: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.1", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.1"}'
+      ROUTER_RULE_IE_TOPIC_1: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.1", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.1"}'
+      ROUTER_RULE_GB_TOPIC_2: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.2", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.2"}'
+      ROUTER_RULE_IE_TOPIC_2: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.2", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.2"}'
+      ROUTER_RULE_GB_TOPIC_3: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.3", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.3"}'
+      ROUTER_RULE_IE_TOPIC_3: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.3", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.3"}'
+      ROUTER_RULE_GB_TOPIC_4: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.4", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.4"}'
+      ROUTER_RULE_IE_TOPIC_4: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.4", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.4"}'
+      ROUTER_RULE_GB_TOPIC_5: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.5", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.5"}'
+      ROUTER_RULE_IE_TOPIC_5: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.5", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.5"}'
+      ROUTER_RULE_GB_TOPIC_6: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.6", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.6"}'
+      ROUTER_RULE_IE_TOPIC_6: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.6", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.6"}'
+      ROUTER_RULE_GB_TOPIC_7: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.7", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.7"}'
+      ROUTER_RULE_IE_TOPIC_7: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.7", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.7"}'
+      ROUTER_RULE_GB_TOPIC_8: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.8", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.8"}'
+      ROUTER_RULE_IE_TOPIC_8: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.8", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.8"}'
+      ROUTER_RULE_GB_TOPIC_9: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.9", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.9"}'
+      ROUTER_RULE_IE_TOPIC_9: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.9", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.9"}'
+    image: ghcr.io/cbdq-io/sbus-router:0.3.0
