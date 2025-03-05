@@ -6,7 +6,7 @@ import logging
 import os
 import sys
 
-from random import choice
+from random import choice, randrange
 from string import ascii_uppercase
 
 import lorem
@@ -50,14 +50,23 @@ logger.info(
 bootstrap_servers = ['localhost:9092']
 producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
 last_reported_percentage = 0
+uk_record_number = randrange(DEFAULT_MESSAGE_COUNT)
 
 for i in range(DEFAULT_MESSAGE_COUNT):
     topic_number = i % DEFAULT_TOPIC_COUNT
     topic_name = f'topic.{topic_number}'
     message_size = MESSAGE_SIZES[i % 5]
+
+    if i == uk_record_number:
+        country = 'UK'
+    elif i % 2 == 0:
+        country = 'GB'
+    else:
+        country = 'IE'
+
     record = {
         'message_number': i,
-        'topic_name': topic_name,
+        'country': country,
         'text': lorem.sentence(),
         'payload': ''
     }
