@@ -48,7 +48,12 @@ logger.info(
 )
 
 bootstrap_servers = ['localhost:9092']
-producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
+producer = KafkaProducer(
+    bootstrap_servers=bootstrap_servers,
+    key_serializer=lambda k: k.encode('utf-8'),
+    value_serializer=lambda v: v.encode('utf-8')
+
+)
 last_reported_percentage = 0
 uk_record_number = randrange(DEFAULT_MESSAGE_COUNT)
 
@@ -78,7 +83,7 @@ for i in range(DEFAULT_MESSAGE_COUNT):
     record['payload'] = payload
     message = json.dumps(record)
     logger.debug(f'{len(message)} - {message}')
-    future = producer.send(topic_name, message.encode())
+    future = producer.send(topic_name, message, key=str(i))
 
     try:
         record_metadata = future.get(timeout=10)
