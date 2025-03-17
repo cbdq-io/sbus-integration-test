@@ -1,6 +1,7 @@
 all: lint build
 
 build:
+	docker compose build --quiet
 	docker compose up -d connect --wait
 	terraform -chdir=terraform plan -out=tfplan
 

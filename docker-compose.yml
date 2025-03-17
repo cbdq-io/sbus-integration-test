@@ -15,7 +15,7 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.converters.ByteArrayConverter
       CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
       CONNECT_LOG4J_LOGGERS: "org.apache.qpid=DEBUG,io.cbdq=DEBUG,org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG"
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
@@ -69,9 +69,11 @@ services:
     image: ghcr.io/cbdq-io/kc-connectors:0.3.0
 
   router:
+    build: docker/router
     container_name: router
     environment:
       LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
       ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_RULE_GB_TOPIC_0: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.0", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.0"}'
@@ -94,4 +96,4 @@ services:
       ROUTER_RULE_IE_TOPIC_8: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.8", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.8"}'
       ROUTER_RULE_GB_TOPIC_9: '{ "destination_namespaces": "GB", "destination_topics": "routed.topic.9", "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.9"}'
       ROUTER_RULE_IE_TOPIC_9: '{ "destination_namespaces": "IE", "destination_topics": "routed.topic.9", "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.9"}'
-    image: ghcr.io/cbdq-io/sbus-router:0.3.0
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"

@@ -13,6 +13,8 @@ resource "azurerm_servicebus_namespace" "sbns" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "Standard"
+  # capacity                     = 1
+  # premium_messaging_partitions = 1
 }
 
 resource "azurerm_servicebus_topic" "sbt_landing" {
@@ -29,7 +31,8 @@ resource "azurerm_servicebus_subscription" "sbts_landing" {
 
   name               = "router"
   topic_id           = azurerm_servicebus_topic.sbt_landing[count.index].id
-  max_delivery_count = 1
+  max_delivery_count = 8
+  requires_session   = false
 }
 
 resource "azurerm_servicebus_subscription" "sbts_archivist" {
@@ -37,7 +40,7 @@ resource "azurerm_servicebus_subscription" "sbts_archivist" {
 
   name               = "archivist"
   topic_id           = azurerm_servicebus_topic.sbt_landing[count.index].id
-  max_delivery_count = 1
+  max_delivery_count = 8
 }
 
 resource "azurerm_servicebus_topic" "sbt" {
@@ -48,12 +51,22 @@ resource "azurerm_servicebus_topic" "sbt" {
   partitioning_enabled = true
 }
 
-resource "azurerm_servicebus_subscription" "sbts" {
+resource "azurerm_servicebus_subscription" "client" {
   count = var.topic_count
 
   name               = "client"
   topic_id           = azurerm_servicebus_topic.sbt[count.index].id
-  max_delivery_count = 1
+  max_delivery_count = 8
+  requires_session   = false
+}
+
+resource "azurerm_servicebus_subscription" "sessions" {
+  count = var.topic_count
+
+  name               = "sessions"
+  topic_id           = azurerm_servicebus_topic.sbt[count.index].id
+  max_delivery_count = 8
+  requires_session   = true
 }
 
 resource "azurerm_storage_account" "sa" {
