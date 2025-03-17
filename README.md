@@ -54,4 +54,5 @@ make clean
 | Version | Record Count | First Record | Last Record | Time (Minutes) | TPM (TPS) |
 | ------- | ------------ | ------------ | ----------- | -------------- | --------- |
 | [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2) | 128,000 | 18:13:54 | 19:01:31 | 48 | 2.6K (44.5) |
-| [0.2.0] | 128,000 | 08:04:13 | 08:51:22 | 47 | 2.7K (45.4) |
+| [0.2.0](https://github.com/cbdq-io/sbus-integration-test/pull/8) | 128,000 | 08:04:13 | 08:51:22 | 47 | 2.7K (45.4) |
+| [0.3.0](https://github.com/cbdq-io/sbus-integration-test/pull/10) | 128,000 | 09:10:58 | 10:02:46 | 52 | 2.5K (41.0) |
