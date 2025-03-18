@@ -31,16 +31,10 @@ Capture the connection string for the Service Bus namespace:
 export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform output -raw connection_string )
 ```
 
-Start the Kafka Connect connector:
+Initiate the traffic:
 
 ```shell
-docker compose run --rm kccinit
-```
-
-Now generate some data to be injected into Kafka:
-
-```shell
-./data_gen.py
+make initiate-traffic
 ```
 
 When finished, run the following to nuke everything from orbit:
@@ -51,8 +45,8 @@ make clean
 
 ## Results
 
-| Version | Record Count | First Record | Last Record | Time (Minutes) | TPM (TPS) |
-| ------- | ------------ | ------------ | ----------- | -------------- | --------- |
-| [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2) | 128,000 | 18:13:54 | 19:01:31 | 48 | 2.6K (44.5) |
-| [0.2.0](https://github.com/cbdq-io/sbus-integration-test/pull/8) | 128,000 | 08:04:13 | 08:51:22 | 47 | 2.7K (45.4) |
-| [0.3.0](https://github.com/cbdq-io/sbus-integration-test/pull/10) | 128,000 | 09:10:58 | 10:02:46 | 52 | 2.5K (41.0) |
+| Version                                                           | Record Count | Duration  | TPS  |
+| ----------------------------------------------------------------- | ------------ | --------- | ---- |
+| [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2)  | 128,000      | PT47M37S  | 44.8 |
+| [0.2.0](https://github.com/cbdq-io/sbus-integration-test/pull/8)  | 128,000      | PT47M9S   | 45.3 |
+| [0.3.0](https://github.com/cbdq-io/sbus-integration-test/pull/10) | 128,000      | PT51M48S  | 41.2 |
