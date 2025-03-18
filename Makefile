@@ -1,7 +1,7 @@
 all: lint build
 
 build:
-	docker compose build --quiet
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 docker-compose build
 	docker compose up -d connect --wait
 	terraform -chdir=terraform plan -out=tfplan
 
@@ -12,6 +12,10 @@ clean:
 deploy:
 	docker compose up -d kafka --wait
 	terraform -chdir=terraform apply -auto-approve -input=false tfplan
+
+initiate-traffic:
+	docker compose run --rm kccinit
+	./data_gen.py
 
 lint:
 	yamllint -s .

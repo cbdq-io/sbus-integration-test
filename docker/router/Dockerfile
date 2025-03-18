@@ -1,3 +1,24 @@
-FROM ghcr.io/cbdq-io/sbus-router:0.4.0
+FROM ghcr.io/cbdq-io/sbus-router:0.5.0
 
-COPY --chmod=644 --chown=appuser:appuser custom.py /home/appuser/custom.py
+COPY --chown=appuser:appuser custom.py /home/appuser/custom.py
+
+ENV ROUTER_RULE_GB_TOPIC_0='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.0", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.0"}'
+ENV ROUTER_RULE_IE_TOPIC_0='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.0", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.0"}'
+ENV ROUTER_RULE_GB_TOPIC_1='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.1", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.1"}'
+ENV ROUTER_RULE_IE_TOPIC_1='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.1", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.1"}'
+ENV ROUTER_RULE_GB_TOPIC_2='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.2", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.2"}'
+ENV ROUTER_RULE_IE_TOPIC_2='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.2", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.2"}'
+ENV ROUTER_RULE_GB_TOPIC_3='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.3", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.3"}'
+ENV ROUTER_RULE_IE_TOPIC_3='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.3", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.3"}'
+ENV ROUTER_RULE_GB_TOPIC_4='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.4", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.4"}'
+ENV ROUTER_RULE_IE_TOPIC_4='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.4", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.4"}'
+ENV ROUTER_RULE_GB_TOPIC_5='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.5", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.5"}'
+ENV ROUTER_RULE_IE_TOPIC_5='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.5", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.5"}'
+ENV ROUTER_RULE_GB_TOPIC_6='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.6", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.6"}'
+ENV ROUTER_RULE_IE_TOPIC_6='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.6", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.6"}'
+ENV ROUTER_RULE_GB_TOPIC_7='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.7", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.7"}'
+ENV ROUTER_RULE_IE_TOPIC_7='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.7", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.7"}'
+ENV ROUTER_RULE_GB_TOPIC_8='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.8", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.8"}'
+ENV ROUTER_RULE_IE_TOPIC_8='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.8", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.8"}'
+ENV ROUTER_RULE_GB_TOPIC_9='{ "destination_namespaces": "GB", "destination_topics": "routed.topic.9", "is_session_required": true, "jmespath": "country", "regexp": "^GB$", "source_subscription": "router", "source_topic": "landing.topic.9"}'
+ENV ROUTER_RULE_IE_TOPIC_9='{ "destination_namespaces": "IE", "destination_topics": "routed.topic.9", "is_session_required": true, "jmespath": "country", "regexp": "^IE$", "source_subscription": "router", "source_topic": "landing.topic.9"}'

@@ -32,7 +32,7 @@ resource "azurerm_servicebus_subscription" "sbts_landing" {
   name               = "router"
   topic_id           = azurerm_servicebus_topic.sbt_landing[count.index].id
   max_delivery_count = 8
-  requires_session   = false
+  requires_session   = true
 }
 
 resource "azurerm_servicebus_subscription" "sbts_archivist" {
@@ -55,15 +55,6 @@ resource "azurerm_servicebus_subscription" "client" {
   count = var.topic_count
 
   name               = "client"
-  topic_id           = azurerm_servicebus_topic.sbt[count.index].id
-  max_delivery_count = 8
-  requires_session   = false
-}
-
-resource "azurerm_servicebus_subscription" "sessions" {
-  count = var.topic_count
-
-  name               = "sessions"
   topic_id           = azurerm_servicebus_topic.sbt[count.index].id
   max_delivery_count = 8
   requires_session   = true
