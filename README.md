@@ -37,6 +37,12 @@ Initiate the traffic:
 make initiate-traffic
 ```
 
+Finally, to start the router, run:
+
+```shell
+docker compose up -d router
+```
+
 When finished, run the following to nuke everything from orbit:
 
 ```shell
