@@ -28,7 +28,8 @@ make deploy
 Capture the connection string for the Service Bus namespace:
 
 ```shell
-export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform output -raw connection_string )
+export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform output -raw sbns_connection_string )
+export ST_CONNECTION_STRING=$( terraform -chdir=terraform output -raw st_connection_string )
 ```
 
 Initiate the traffic:
@@ -37,10 +38,10 @@ Initiate the traffic:
 make initiate-traffic
 ```
 
-Finally, to start the router, run:
+Finally, to start the archivist and router, run:
 
 ```shell
-docker compose up -d router
+docker compose up -d archivist router
 ```
 
 When finished, run the following to nuke everything from orbit:

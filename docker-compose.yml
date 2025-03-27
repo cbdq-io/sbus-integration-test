@@ -1,5 +1,18 @@
 ---
 services:
+  archivist:
+    build: ./docker/archivist
+    container_name: archivist
+    environment:
+      CONTAINER_NAME: landing-archive
+      LOG_LEVEL: INFO
+      MAX_MESSAGES_IN_BATCH: 1000
+      PATH_FORMAT: "year=YYYY/month=MM/day=dd/hour=HH/minute=mm"
+      SERVICE_BUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      STORAGE_ACCOUNT_CONNECTION_STRING: "${ST_CONNECTION_STRING}"
+      TOPICS_AND_SUBSCRIPTIONS: "landing.topic.0:archivist,landing.topic.1:archivist,landing.topic.2:archivist,landing.topic.3:archivist,landing.topic.4:archivist,landing.topic.5:archivist,landing.topic.6:archivist,landing.topic.7:archivist,landing.topic.8:archivist,landing.topic.9:archivist"
+      TOPICS_DIR: topics
+      WAIT_TIME_SECONDS: 15
   connect:
     container_name: connect
     depends_on:
