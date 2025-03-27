@@ -113,7 +113,8 @@ resource "azurerm_service_plan" "app_service_plan" {
 }
 
 resource "azurerm_linux_function_app" "archivist" {
-  name                       = "archivist${random_integer.numeric_suffix.result}"
+  count                      = var.topic_count
+  name                       = "archivist${random_integer.numeric_suffix.result}-${count.index}"
   service_plan_id            = azurerm_service_plan.app_service_plan.id
   resource_group_name        = azurerm_resource_group.rg.name
   location                   = azurerm_resource_group.rg.location
@@ -123,15 +124,16 @@ resource "azurerm_linux_function_app" "archivist" {
 
   app_settings = {
     "CONTAINER_NAME"                      = azurerm_storage_container.landing_archive.name
-    "DOCKER_CUSTOM_IMAGE_NAME"            = "ghcr.io/cbdq-io/func-sbt-to-blob:latest"
+    "DOCKER_CUSTOM_IMAGE_NAME"            = "ghcr.io/cbdq-io/func-sbt-to-blob:0.2.0"
     "FUNCTIONS_WORKER_RUNTIME"            = "python"
     "LOG_LEVEL"                           = "DEBUG"
-    "PATH_FORMAT"                         = "year=YYYY/month=MM/day=dd/hour=HH"
+    "PATH_FORMAT"                         = "year=YYYY/month=MM/day=dd/hour=HH/minute=mm"
     "SERVICE_BUS_CONNECTION_STRING"       = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
     "STORAGE_ACCOUNT_CONNECTION_STRING"   = azurerm_storage_account.sa.primary_connection_string
     "SUBSCRIPTION_NAME"                   = "archivist"
-    "TIMER_SCHEDULE"                      = "0 */5 * * * *"
-    "TOPIC_NAME"                          = local.archive_topic
+    "TIMER_SCHEDULE"                      = "0 ${local.staggered_minutes[count.index]}-59/5 * * * *"
+    "TOPIC_NAME"                          = azurerm_servicebus_topic.sbt_landing[count.index].name
+    "WAIT_TIME_SECONDS"                   = "30"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
 
