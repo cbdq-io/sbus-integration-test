@@ -1,0 +1,43 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-gen
+  namespace: kafka
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: python
+          image: python:3.11
+          command:
+            - /bin/sh
+            - -c
+            - |
+              pip install kafka-python-ng lorem python-snappy && \
+              python /app/data_gen.py
+          env:
+            - name: KAFKA_BOOTSTRAP
+              value: sbox-kafka-bootstrap.kafka.svc:9092
+            - name: KAFKA_USERNAME
+              value: sbox
+            - name: KAFKA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sbox
+                  key: password
+          volumeMounts:
+            - name: script-volume
+              mountPath: /app
+            - name: ca-cert-volume
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: script-volume
+          configMap:
+            name: data-gen-script
+        - name: ca-cert-volume
+          secret:
+            secretName: ca-cert
