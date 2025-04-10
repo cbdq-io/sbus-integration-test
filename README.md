@@ -43,12 +43,6 @@ export KAFKA_BOOTSTRAP=$(kubectl -n strimzi get kafka sbox -o=jsonpath='{.status
 export KAFKA_PASSWORD=$(kubectl -n strimzi get secret/sbox -o json | jq -r .data.password | base64 -d)
 ```
 
-New pre-load the data into Kafka:
-
-```shell
-./data_gen.py
-```
-
 Prepare credentials for Kafka Connect:
 
 ```shell
@@ -74,17 +68,29 @@ Now start Kafka Connect:
 docker compose up -d connect --wait
 ```
 
+New pre-load the data into Kafka:
+
+```shell
+./data_gen.py
+```
+
+Deploy the Azure infrastructure:
+
+```shell
+terraform -chdir=terraform/azure apply -auto-approve -input=false
+```
+
 Capture various environment variables for credentials:
 
 ```shell
-export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform output -raw sbns_connection_string )
-export ST_CONNECTION_STRING=$( terraform -chdir=terraform output -raw st_connection_string )
+export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw sbns_connection_string )
+export ST_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw st_connection_string )
 ```
 
-Initiate the traffic:
+Now start the custom connector:
 
 ```shell
-make initiate-traffic
+docker compose run --rm kccinit
 ```
 
 Finally, to start the archivist and router, run:

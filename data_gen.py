@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """A script to inject data into Kafka."""
 import argparse
+import datetime
 import json
 import logging
 import os
@@ -57,6 +58,11 @@ last_reported_percentage = 0
 uk_record_number = randrange(DEFAULT_MESSAGE_COUNT)
 
 for i in range(DEFAULT_MESSAGE_COUNT):
+    create_timestamp = datetime \
+        .datetime \
+        .now(datetime.UTC) \
+        .isoformat() \
+        .replace('+00:00', 'Z')
     topic_number = i % DEFAULT_TOPIC_COUNT
     topic_name = f'topic.{topic_number}'
     message_size = MESSAGE_SIZES[i % 5]
@@ -69,6 +75,7 @@ for i in range(DEFAULT_MESSAGE_COUNT):
         country = 'IE'
 
     record = {
+        'create_timestamp': create_timestamp,
         'message_number': i,
         'country': country,
         'text': lorem.sentence(),

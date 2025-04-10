@@ -6,8 +6,10 @@ build:
 	terraform -chdir=terraform plan -out=tfplan
 
 clean:
-	terraform -chdir=terraform apply -auto-approve -destroy -input=false
+	terraform -chdir=terraform/azure apply -auto-approve -destroy -input=false
+	terraform -chdir=terraform/kafka apply -auto-approve -destroy -input=false
 	docker compose down -t 0
+	rm -rf certs
 
 deploy:
 	docker compose up -d kafka --wait
