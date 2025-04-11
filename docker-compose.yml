@@ -21,7 +21,11 @@ services:
       CONNECT_CONFIG_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.config
       CONNECT_GROUP_ID: external_kafka_connect_docker
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      CONNECT_LOG4J_LOGGERS: "org.apache.qpid=DEBUG,io.cbdq=DEBUG,org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG"
+      CONNECT_LOG4J_LOGGERS: >-
+        org.apache.qpid=DEBUG,
+        io.cbdq=DEBUG,
+        org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG,
+        org.apache.kafka.clients.consumer.internals.Fetcher=TRACE
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_OFFSET_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.offset
       CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
@@ -52,6 +56,15 @@ services:
       CONNECTOR_AzureServiceBusSink_AZURE_SERVICEBUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       CONNECTOR_AzureServiceBusSink_CONNECTOR_CLASS: io.cbdq.AzureServiceBusSinkConnector
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_AUTO_OFFSET_RESET: earliest
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="sbox" password="${KAFKA_PASSWORD}";'
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_MECHANISM: "SCRAM-SHA-512"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_LOCATION: "/mnt/certs/kafka-truststore.jks"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_PASSWORD: "changeit"
+      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_ENABLE: "true"
+      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_INCLUDE_MESSAGES: "true"
+      CONNECTOR_AzureServiceBusSink_ERRORS_TOLERANCE: "all"
       CONNECTOR_AzureServiceBusSink_RETRY_MAX_ATTEMPTS: "5"
       CONNECTOR_AzureServiceBusSink_RETRY_WAIT_TIME_MS: "1000"
       CONNECTOR_AzureServiceBusSink_SET_KAFKA_PARTITION_AS_SESSION_ID: true

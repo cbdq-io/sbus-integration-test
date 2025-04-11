@@ -283,8 +283,20 @@ resource "kubernetes_manifest" "kafkauser_sbox" {
         "acls" = [
           {
             "operations" = [
+              "Describe",
+              "Read"
+            ]
+            "resource" = {
+              "name"        = "connect-"
+              "patternType" = "prefix"
+              "type"        = "group"
+            }
+          },
+          {
+            "operations" = [
+              "Describe",
               "Read",
-              "Write",
+              "Write"
             ]
             "resource" = {
               "name"        = "topic."
@@ -294,6 +306,8 @@ resource "kubernetes_manifest" "kafkauser_sbox" {
           },
           {
             "operations" = [
+              "Describe",
+              "DescribeConfigs",
               "Read",
               "Write",
             ]
