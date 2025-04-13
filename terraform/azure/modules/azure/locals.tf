@@ -1,4 +1,7 @@
 locals {
+  certs_abs_path = abspath("${path.module}/../../../../certs")
+  cert_files     = tolist(fileset("${path.module}/../../../../certs", "*"))
+
   location_abbreviation = {
     "UK South" = "uks",
     "UK West"  = "ukw"

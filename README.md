@@ -1,6 +1,8 @@
 # sbus-integration-test
 An integration test of the Kafka Connect connector for Azure Service Bus and the Service Bus Router.
 
+![It's simple really...](./docs/images/slack-imgs.png)
+
 To run through the test, firstly login to Azure with:
 
 ```shell
@@ -31,6 +33,7 @@ green-pool-0-6ygsx   Ready    <none>   11d   v1.32.2
 Deploy Strimzi/Kafka with:
 
 ```shell
+make
 terraform -chdir=terraform/kafka apply -auto-approve -input=false
 ```
 
@@ -40,7 +43,9 @@ Capture the credentials for Strimzi Kafka:
 mkdir -p certs
 kubectl -n strimzi get secret sbox-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 -d > certs/ca.crt
 export KAFKA_BOOTSTRAP=$(kubectl -n strimzi get kafka sbox -o=jsonpath='{.status.listeners[?(@.name=="external")].bootstrapServers}')
+export TF_VAR_kafka_bootstrap="$KAFKA_BOOTSTRAP"
 export KAFKA_PASSWORD=$(kubectl -n strimzi get secret/sbox -o json | jq -r .data.password | base64 -d)
+export TF_VAR_kafka_password="$KAFKA_PASSWORD"
 ```
 
 Prepare credentials for Kafka Connect:
@@ -62,12 +67,6 @@ KafkaClient {
 _EOF
 ```
 
-Now start Kafka Connect:
-
-```shell
-docker compose up -d connect --wait
-```
-
 New pre-load the data into Kafka:
 
 ```shell
@@ -87,16 +86,23 @@ export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw sb
 export ST_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw st_connection_string )
 ```
 
-Now start the custom connector:
-
-```shell
-docker compose run --rm kccinit
-```
-
 Finally, to start the archivist and router, run:
 
 ```shell
 docker compose up -d archivist router
+```
+
+Use the following KCL query in Log Analytics to track how many records are being transferred:
+
+```
+ContainerInstanceLog_CL
+| where Message has "Received"
+| extend RecordCount = extract(@"Received\s+(\d+)\s+records", 1, Message)
+| where isnotempty(RecordCount)
+| extend RecordCountInt = toint(RecordCount)
+| where RecordCountInt >= 0 and RecordCountInt <= 500
+| project TimeGenerated, Message, RecordCountInt
+| order by TimeGenerated desc
 ```
 
 When finished, run the following to nuke everything from orbit:

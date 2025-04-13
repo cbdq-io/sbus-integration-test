@@ -207,3 +207,4 @@ terraform.rc
 !.qlty/configs/**
 
 certs/*
+.DS_Store

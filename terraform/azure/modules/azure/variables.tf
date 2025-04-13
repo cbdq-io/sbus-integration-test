@@ -1,3 +1,20 @@
+variable "kafka_bootstrap" {
+  description = "The bootstrap server(s) for Kafka."
+  type        = string
+}
+
+variable "kafka_password" {
+  description = "The SASL password for Kafka."
+  sensitive   = true
+  type        = string
+}
+
+variable "kc_image" {
+  description = "The Kafka Connect image and tag."
+  default     = "ghcr.io/cbdq-io/kc-connectors:0.3.1"
+  type        = string
+}
+
 variable "location" {
   description = "The Azure location to deploy resources into."
   type        = string
