@@ -1,55 +1,52 @@
 ---
 services:
+  archivist:
+    build: ./docker/archivist
+    container_name: archivist
+    environment:
+      CONTAINER_NAME: landing-archive
+      LOG_LEVEL: INFO
+      MAX_MESSAGES_IN_BATCH: 1000
+      PATH_FORMAT: "year=YYYY/month=MM/day=dd/hour=HH/minute=mm"
+      SERVICE_BUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      STORAGE_ACCOUNT_CONNECTION_STRING: "${ST_CONNECTION_STRING}"
+      TOPICS_AND_SUBSCRIPTIONS: "landing.topic.0:archivist,landing.topic.1:archivist,landing.topic.2:archivist,landing.topic.3:archivist,landing.topic.4:archivist,landing.topic.5:archivist,landing.topic.6:archivist,landing.topic.7:archivist,landing.topic.8:archivist,landing.topic.9:archivist"
+      TOPICS_DIR: topics
+      WAIT_TIME_SECONDS: 15
+
   connect:
     container_name: connect
-    depends_on:
-      kafka:
-        condition: service_healthy
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_BOOTSTRAP_SERVERS: "${KAFKA_BOOTSTRAP}"
+      CONNECT_CONFIG_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.config
       CONNECT_GROUP_ID: external_kafka_connect_docker
-      CONNECT_CONFIG_STORAGE_TOPIC: vault.infra.external.kafka_connect.default.config
-      CONNECT_OFFSET_STORAGE_TOPIC: vault.infra.external.kafka_connect.default.offset
-      CONNECT_STATUS_STORAGE_TOPIC: vault.infra.external.kafka_connect.default.status
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.converters.ByteArrayConverter
-      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
-      CONNECT_LOG4J_LOGGERS: "org.apache.qpid=DEBUG,io.cbdq=DEBUG,org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG"
+      CONNECT_LOG4J_LOGGERS: >-
+        org.apache.qpid=DEBUG,
+        io.cbdq=DEBUG,
+        org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG,
+        org.apache.kafka.clients.consumer.internals.Fetcher=TRACE
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      CONNECT_OFFSET_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.offset
+      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+      CONNECT_SASL_MECHANISM: SCRAM-SHA-512
+      CONNECT_SASL_PLAIN_PASSWORD: "${KAFKA_PASSWORD}"
+      CONNECT_SASL_PLAIN_USERNAME: sbox
+      CONNECT_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_SSL_CAFILE: "/mnt/certs/ca.crt"
+      CONNECT_SSL_CHECK_HOSTNAME: "false"
+      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /mnt/certs/kafka-truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_STATUS_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.status
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.converters.ByteArrayConverter
+      KAFKA_OPTS: -Djava.security.auth.login.config=/mnt/certs/kafka-client-jaas.conf
     image: ghcr.io/cbdq-io/kc-connectors:0.3.0
+    volumes:
+      - "./certs:/mnt/certs:ro"
     ports:
       - 8083:8083
       - 9400:9400
-
-  kafka:
-    container_name: kafka
-    environment:
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
-      KAFKA_LISTENERS: 'INTERNAL://kafka:29092,CONTROLLER://kafka:29093,EXTERNAL://0.0.0.0:9092'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      KAFKA_MAX_REQUEST_SIZE: 4194352
-      KAFKA_NODE_ID: 1
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      LOG_LEVEL: WARN
-    healthcheck:
-      test: kafka-topics --list --bootstrap-server kafka:9092
-      interval: 1s
-      retries: 30
-    image: confluentinc/cp-kafka:7.6.2
-    ports:
-      - 9092:9092
 
   kccinit:
     depends_on: []
@@ -59,6 +56,15 @@ services:
       CONNECTOR_AzureServiceBusSink_AZURE_SERVICEBUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       CONNECTOR_AzureServiceBusSink_CONNECTOR_CLASS: io.cbdq.AzureServiceBusSinkConnector
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_AUTO_OFFSET_RESET: earliest
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="sbox" password="${KAFKA_PASSWORD}";'
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_MECHANISM: "SCRAM-SHA-512"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_LOCATION: "/mnt/certs/kafka-truststore.jks"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_PASSWORD: "changeit"
+      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_ENABLE: "true"
+      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_INCLUDE_MESSAGES: "true"
+      CONNECTOR_AzureServiceBusSink_ERRORS_TOLERANCE: "all"
       CONNECTOR_AzureServiceBusSink_RETRY_MAX_ATTEMPTS: "5"
       CONNECTOR_AzureServiceBusSink_RETRY_WAIT_TIME_MS: "1000"
       CONNECTOR_AzureServiceBusSink_SET_KAFKA_PARTITION_AS_SESSION_ID: true
