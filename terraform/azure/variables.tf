@@ -1,3 +1,14 @@
+variable "kafka_bootstrap" {
+  description = "The bootstrap server(s) for Kafka."
+  type        = string
+}
+
+variable "kafka_password" {
+  description = "The SASL password for Kafka."
+  sensitive   = true
+  type        = string
+}
+
 variable "subscription_id" {
   description = "The Azure subscription ID to be used."
   type        = string
