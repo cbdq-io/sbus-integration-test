@@ -205,6 +205,7 @@ resource "azurerm_container_group" "kafka_connect" {
       CONNECTOR_AzureServiceBusSink_ERRORS_LOG_ENABLE                                       = "true"
       CONNECTOR_AzureServiceBusSink_ERRORS_LOG_INCLUDE_MESSAGES                             = "true"
       CONNECTOR_AzureServiceBusSink_ERRORS_TOLERANCE                                        = "all"
+      CONNECTOR_AzureServiceBusSink_MAX_POLL_RECORDS                                        = "1000"
       CONNECTOR_AzureServiceBusSink_RETRY_MAX_ATTEMPTS                                      = "5"
       CONNECTOR_AzureServiceBusSink_RETRY_WAIT_TIME_MS                                      = "1000"
       CONNECTOR_AzureServiceBusSink_SET_KAFKA_PARTITION_AS_SESSION_ID                       = "true"
