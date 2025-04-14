@@ -100,7 +100,6 @@ ContainerInstanceLog_CL
 | extend RecordCount = extract(@"Received\s+(\d+)\s+records", 1, Message)
 | where isnotempty(RecordCount)
 | extend RecordCountInt = toint(RecordCount)
-| where RecordCountInt >= 0 and RecordCountInt <= 500
 | project TimeGenerated, Message, RecordCountInt
 | order by TimeGenerated desc
 ```
@@ -113,9 +112,10 @@ make clean
 
 ## Results
 
-| Version                                                           | Record Count | Duration  | TPS  |
-| ----------------------------------------------------------------- | ------------ | --------- | ---- |
-| [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2)  | 128,000      | PT47M37S  | 44.8 |
-| [0.2.0](https://github.com/cbdq-io/sbus-integration-test/pull/8)  | 128,000      | PT47M9S   | 45.3 |
-| [0.3.0](https://github.com/cbdq-io/sbus-integration-test/pull/10) | 128,000      | PT51M48S  | 41.2 |
-| [0.4.0](https://github.com/cbdq-io/sbus-integration-test/pull/12) | 128,000      | PT46M12S  | 46.2 |
+| Version                                                           | Record Count | Duration  | TPS   |
+| ----------------------------------------------------------------- | ------------ | --------- | ----- |
+| [0.1.0](https://github.com/cbdq-io/sbus-integration-test/pull/2)  | 128,000      | PT47M37S  |  44.8 |
+| [0.2.0](https://github.com/cbdq-io/sbus-integration-test/pull/8)  | 128,000      | PT47M9S   |  45.3 |
+| [0.3.0](https://github.com/cbdq-io/sbus-integration-test/pull/10) | 128,000      | PT51M48S  |  41.2 |
+| [0.4.0](https://github.com/cbdq-io/sbus-integration-test/pull/12) | 128,000      | PT46M12S  |  46.2 |
+| [0.5.0](https://github.com/cbdq-io/sbus-integration-test/pull/16) | 128,000      | PT19M17S  | 110.7 |
