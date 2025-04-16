@@ -7,6 +7,7 @@ import logging
 import os
 import time
 
+from concurrent.futures import ThreadPoolExecutor
 from random import choice, randrange
 from string import ascii_uppercase
 
@@ -26,6 +27,15 @@ logging.basicConfig(
 logger = logging.getLogger(PROG_NAME)
 logger.setLevel(logging.INFO)
 
+
+def safe_send(topic, key, value):
+    try:
+        future = producer.send(topic, key=key, value=value)
+        future.get(timeout=10)  # Blocks until acked or error
+    except Exception as e:
+        logger.error(f"Failed to send message to {topic}: {e}")
+
+
 parser = argparse.ArgumentParser(
     prog=PROG_NAME,
     description=__doc__
@@ -37,6 +47,7 @@ if args.debug:
     logger.setLevel(logging.DEBUG)
 
 logger.info(f'Log level is {logging.getLevelName(logger.getEffectiveLevel())}.')
+executor = ThreadPoolExecutor(max_workers=8)
 
 producer = KafkaProducer(
     bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP').split(','),
@@ -46,10 +57,10 @@ producer = KafkaProducer(
     sasl_plain_password=os.getenv('KAFKA_PASSWORD'),
     ssl_check_hostname=False,
     ssl_cafile='certs/ca.crt',
-    value_serializer=lambda v: v.encode('utf-8'),
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),  # ← Fixed here
     key_serializer=lambda k: k.encode('utf-8'),
-    linger_ms=10,
-    batch_size=16384
+    linger_ms=20,
+    batch_size=65536
 )
 
 start_time = time.time()
@@ -88,7 +99,7 @@ for i in range(DEFAULT_MESSAGE_COUNT):
     message = json.dumps(record)
 
     logger.debug(f'{len(message)} - {message}')
-    producer.send(topic_name, message, key=str(i))
+    executor.submit(safe_send, topic_name, str(i), record)
 
     percentage_complete = round((i / DEFAULT_MESSAGE_COUNT) * 100, 0)
 
@@ -111,5 +122,6 @@ for i in range(DEFAULT_MESSAGE_COUNT):
 
 flush_start = time.time()
 producer.flush()
+executor.shutdown(wait=True)
 flush_duration = time.time() - flush_start
-logger.info(f'Flush completed in {flush_duration:.2f} seconds')
+logger.info(f'Flush + executor shutdown completed in {flush_duration:.2f} seconds')
