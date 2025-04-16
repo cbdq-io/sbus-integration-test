@@ -14,67 +14,6 @@ services:
       TOPICS_DIR: topics
       WAIT_TIME_SECONDS: 15
 
-  connect:
-    container_name: connect
-    environment:
-      CONNECT_BOOTSTRAP_SERVERS: "${KAFKA_BOOTSTRAP}"
-      CONNECT_CONFIG_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.config
-      CONNECT_GROUP_ID: external_kafka_connect_docker
-      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
-      CONNECT_LOG4J_LOGGERS: >-
-        org.apache.qpid=DEBUG,
-        io.cbdq=DEBUG,
-        org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG,
-        org.apache.kafka.clients.consumer.internals.Fetcher=TRACE
-      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
-      CONNECT_OFFSET_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.offset
-      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
-      CONNECT_SASL_MECHANISM: SCRAM-SHA-512
-      CONNECT_SASL_PLAIN_PASSWORD: "${KAFKA_PASSWORD}"
-      CONNECT_SASL_PLAIN_USERNAME: sbox
-      CONNECT_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_SSL_CAFILE: "/mnt/certs/ca.crt"
-      CONNECT_SSL_CHECK_HOSTNAME: "false"
-      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
-      CONNECT_SSL_TRUSTSTORE_LOCATION: /mnt/certs/kafka-truststore.jks
-      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
-      CONNECT_STATUS_STORAGE_TOPIC: vault.infra.external.kafkaconnect.default.status
-      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.converters.ByteArrayConverter
-      KAFKA_OPTS: -Djava.security.auth.login.config=/mnt/certs/kafka-client-jaas.conf
-    image: ghcr.io/cbdq-io/kc-connectors:0.3.0
-    volumes:
-      - "./certs:/mnt/certs:ro"
-    ports:
-      - 8083:8083
-      - 9400:9400
-
-  kccinit:
-    depends_on: []
-      # - router
-    entrypoint: /usr/local/bin/kccinit.py
-    environment:
-      CONNECTOR_AzureServiceBusSink_AZURE_SERVICEBUS_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
-      CONNECTOR_AzureServiceBusSink_CONNECTOR_CLASS: io.cbdq.AzureServiceBusSinkConnector
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_AUTO_OFFSET_RESET: earliest
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="sbox" password="${KAFKA_PASSWORD}";'
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_MECHANISM: "SCRAM-SHA-512"
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SECURITY_PROTOCOL: "SASL_SSL"
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_LOCATION: "/mnt/certs/kafka-truststore.jks"
-      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_TRUSTSTORE_PASSWORD: "changeit"
-      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_ENABLE: "true"
-      CONNECTOR_AzureServiceBusSink_ERRORS_LOG_INCLUDE_MESSAGES: "true"
-      CONNECTOR_AzureServiceBusSink_ERRORS_TOLERANCE: "all"
-      CONNECTOR_AzureServiceBusSink_RETRY_MAX_ATTEMPTS: "5"
-      CONNECTOR_AzureServiceBusSink_RETRY_WAIT_TIME_MS: "1000"
-      CONNECTOR_AzureServiceBusSink_SET_KAFKA_PARTITION_AS_SESSION_ID: true
-      CONNECTOR_AzureServiceBusSink_TASKS_MAX: "1"
-      CONNECTOR_AzureServiceBusSink_TOPIC_RENAME_FORMAT: "landing.$${topic}"
-      CONNECTOR_AzureServiceBusSink_TOPICS: "topic.0,topic.1,topic.2,topic.3,topic.4,topic.5,topic.6,topic.7,topic.8,topic.9"
-      KAFKA_CONNECT_ENDPOINT: "http://connect:8083"
-      LOG_LEVEL: DEBUG
-    image: ghcr.io/cbdq-io/kc-connectors:0.3.0
-
   router:
     build: docker/router
     container_name: router
