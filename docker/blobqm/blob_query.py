@@ -8,11 +8,11 @@ from pathlib import Path
 
 # Get environment variables
 blob_prefix       = os.getenv("BLOB_PREFIX")
-blob_root         = "topics/"
 conn_str          = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
-container_name    = os.getenv("BLOB_CONTAINER_NAME")
+container_name    = os.getenv("CONTAINER_NAME")
 expected_messages = set(range(128000))  # 0 to 127999
-prefix            = f"{blob_root.rstrip('/')}/{blob_prefix.lstrip('/')}"
+topics_dir        = os.getenv("TOPICS_DIR")
+prefix            = f"{topics_dir.rstrip('/')}/{blob_prefix.lstrip('/')}"
 
 # Validate required variables
 if not conn_str:
