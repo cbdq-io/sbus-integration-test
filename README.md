@@ -104,6 +104,12 @@ ContainerInstanceLog_CL
 | order by TimeGenerated desc
 ```
 
+Once all records have been processed by the archivist and router, verify that 128,000 unique messages are held on Blob storage:
+
+```shell
+docker compose up --build blobqm
+```
+
 When finished, run the following to nuke everything from orbit:
 
 ```shell
