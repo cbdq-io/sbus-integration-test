@@ -14,6 +14,16 @@ services:
       TOPICS_DIR: topics
       WAIT_TIME_SECONDS: 15
 
+  blobqm:
+    build: docker/blobqm
+    container_name: blobqm
+    environment:
+      BLOB_PREFIX: landing
+      CONTAINER_NAME: landing-archive
+      LOG_LEVEL: INFO
+      STORAGE_ACCOUNT_CONNECTION_STRING: "${ST_CONNECTION_STRING}"
+      TOPICS_DIR: topics
+
   router:
     build: docker/router
     container_name: router
