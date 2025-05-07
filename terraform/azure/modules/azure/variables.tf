@@ -20,6 +20,11 @@ variable "location" {
   type        = string
 }
 
+variable "sbns_capacity" {
+  description = "The capacity for the Azure Service Bus namespace."
+  type        = number
+}
+
 variable "subscription_id" {
   description = "The Azure subscription ID to be used."
   type        = string
