@@ -9,12 +9,12 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_servicebus_namespace" "sbns" {
-  name                = local.sbns_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  sku                 = "Standard"
-  # capacity                     = 1
-  # premium_messaging_partitions = 1
+  name                         = local.sbns_name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  sku                          = "Premium"
+  capacity                     = var.sbns_capacity
+  premium_messaging_partitions = 1
 }
 
 resource "azurerm_servicebus_topic" "sbt_landing" {

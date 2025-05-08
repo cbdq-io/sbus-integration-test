@@ -126,4 +126,5 @@ make clean
 | [0.4.0](https://github.com/cbdq-io/sbus-integration-test/pull/12)    | 128,000      | PT46M12S  |  46.2 |
 | [0.5.0](https://github.com/cbdq-io/sbus-integration-test/pull/16)    | 128,000      | PT19M17S  | 110.7 |
 | [0.5.1](https://github.com/cbdq-io/sbus-integration-test/pull/18)    | 128,000      | PT20M32S  | 103.9 |
-| [0.5.2](https://github.com/cbdq-io/sbus-integration-test/tree/0.5.2) | 128,000      | PT20M32S  | 331.9 |
+| [0.5.2](https://github.com/cbdq-io/sbus-integration-test/tree/0.5.2) | 128,000      | PT6M26S   | 331.9 |
+| [0.5.3](https://github.com/cbdq-io/sbus-integration-test/pull/22)    | 128,000      | PT4M38Si  | 460.4 |
