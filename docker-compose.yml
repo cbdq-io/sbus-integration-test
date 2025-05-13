@@ -27,9 +27,50 @@ services:
   router:
     build: docker/router
     container_name: router
+    depends_on:
+      router2:
+        condition: service_healthy
+      router3:
+        condition: service_healthy
+      router4:
+        condition: service_healthy
     environment:
       LOG_LEVEL: INFO
       ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router2:
+    build: docker/router
+    container_name: router2
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router3:
+    build: docker/router
+    container_name: router3
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router4:
+    build: docker/router
+    container_name: router4
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
       ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
