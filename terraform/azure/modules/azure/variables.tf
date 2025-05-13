@@ -11,13 +11,18 @@ variable "kafka_password" {
 
 variable "kc_image" {
   description = "The Kafka Connect image and tag."
-  default     = "ghcr.io/cbdq-io/kc-connectors:0.3.5"
+  default     = "ghcr.io/cbdq-io/kc-connectors:latest"
   type        = string
 }
 
 variable "location" {
   description = "The Azure location to deploy resources into."
   type        = string
+}
+
+variable "sbns_capacity" {
+  description = "The capacity for the Azure Service Bus namespace."
+  type        = number
 }
 
 variable "subscription_id" {

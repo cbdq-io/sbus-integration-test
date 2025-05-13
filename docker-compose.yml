@@ -14,12 +14,63 @@ services:
       TOPICS_DIR: topics
       WAIT_TIME_SECONDS: 15
 
+  blobqm:
+    build: docker/blobqm
+    container_name: blobqm
+    environment:
+      BLOB_PREFIX: landing
+      CONTAINER_NAME: landing-archive
+      LOG_LEVEL: INFO
+      STORAGE_ACCOUNT_CONNECTION_STRING: "${ST_CONNECTION_STRING}"
+      TOPICS_DIR: topics
+
   router:
     build: docker/router
     container_name: router
+    depends_on:
+      router2:
+        condition: service_healthy
+      router3:
+        condition: service_healthy
+      router4:
+        condition: service_healthy
     environment:
       LOG_LEVEL: INFO
       ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router2:
+    build: docker/router
+    container_name: router2
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router3:
+    build: docker/router
+    container_name: router3
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
+      ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+      ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
+
+  router4:
+    build: docker/router
+    container_name: router4
+    environment:
+      LOG_LEVEL: INFO
+      ROUTER_CUSTOM_SENDER: "custom:custom_sender"
+      ROUTER_MAX_TASKS: 2
       ROUTER_NAMESPACE_GB_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_NAMESPACE_IE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"
       ROUTER_SOURCE_CONNECTION_STRING: "${SBNS_CONNECTION_STRING}"

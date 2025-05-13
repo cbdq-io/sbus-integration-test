@@ -9,12 +9,12 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_servicebus_namespace" "sbns" {
-  name                = local.sbns_name
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  sku                 = "Standard"
-  # capacity                     = 1
-  # premium_messaging_partitions = 1
+  name                         = local.sbns_name
+  location                     = azurerm_resource_group.rg.location
+  resource_group_name          = azurerm_resource_group.rg.name
+  sku                          = "Premium"
+  capacity                     = var.sbns_capacity
+  premium_messaging_partitions = 1
 }
 
 resource "azurerm_servicebus_topic" "sbt_landing" {
@@ -208,7 +208,7 @@ resource "azurerm_container_group" "kafka_connect" {
       CONNECTOR_AzureServiceBusSink_RETRY_MAX_ATTEMPTS                                      = "5"
       CONNECTOR_AzureServiceBusSink_RETRY_WAIT_TIME_MS                                      = "1000"
       CONNECTOR_AzureServiceBusSink_SET_KAFKA_PARTITION_AS_SESSION_ID                       = "true"
-      CONNECTOR_AzureServiceBusSink_TASKS_MAX                                               = "5"
+      CONNECTOR_AzureServiceBusSink_TASKS_MAX                                               = "1"
       CONNECTOR_AzureServiceBusSink_TOPIC_RENAME_FORMAT                                     = "landing.$${topic}"
       CONNECTOR_AzureServiceBusSink_TOPICS                                                  = "topic.0,topic.1,topic.2,topic.3,topic.4,topic.5,topic.6,topic.7,topic.8,topic.9"
       KAFKA_CONNECT_ENDPOINT                                                                = "http://localhost:8083"

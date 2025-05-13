@@ -27,12 +27,12 @@ resource "kubernetes_manifest" "kafkanodepool_controller" {
       "replicas" = 3
       "resources" = {
         "limits" = {
-          "cpu"    = "2"
-          "memory" = "4Gi"
+          "cpu"    = "3"
+          "memory" = "6Gi"
         }
         "requests" = {
-          "cpu"    = "1"
-          "memory" = "2Gi"
+          "cpu"    = "2"
+          "memory" = "4Gi"
         }
       }
       "roles" = [
@@ -92,16 +92,17 @@ resource "kubernetes_manifest" "kafka_sbox" {
           "type" = "simple"
         }
         "config" = {
-          "default.replication.factor"               = 3
-          "log.flush.interval.messages"              = 10000
-          "log.flush.interval.ms"                    = 1000
-          "min.insync.replicas"                      = 2
-          "num.io.threads"                           = 12
-          "num.network.threads"                      = 8
-          "offsets.topic.replication.factor"         = 3
-          "queued.max.requests"                      = 1000
-          "transaction.state.log.min.isr"            = 2
-          "transaction.state.log.replication.factor" = 3
+          "default.replication.factor"               = 2
+          "min.insync.replicas"                      = 1
+          "num.io.threads"                           = 16
+          "num.network.threads"                      = 16
+          "offsets.topic.replication.factor"         = 2
+          "queued.max.requests"                      = 5000
+          "transaction.state.log.min.isr"            = 1
+          "transaction.state.log.replication.factor" = 2
+          "replica.fetch.max.bytes"                  = 1048576
+          "num.replica.fetchers"                     = 4
+          "log.retention.hours"                      = 6
         }
         "listeners" = [
           {
@@ -249,8 +250,8 @@ resource "kubernetes_manifest" "kafkatopic_topics" {
       "namespace" = var.ns_name
     }
     "spec" = {
-      "partitions" = 4
-      "replicas"   = 3
+      "partitions" = 8
+      "replicas"   = 2
     }
   }
 

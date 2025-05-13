@@ -9,6 +9,12 @@ variable "kafka_password" {
   type        = string
 }
 
+variable "sbns_capacity" {
+  description = "The capacity for the Azure Service Bus namespace."
+  default     = 1
+  type        = number
+}
+
 variable "subscription_id" {
   description = "The Azure subscription ID to be used."
   type        = string
