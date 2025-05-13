@@ -1,54 +1,42 @@
 #!/usr/bin/env python
-"""A script to inject data into Kafka."""
+"""Reliable Kafka data injector."""
 import argparse
 import datetime
 import json
 import logging
 import os
 import time
-
 from concurrent.futures import ThreadPoolExecutor
 from random import choice, randrange
 from string import ascii_uppercase
-
-import lorem
+from threading import BoundedSemaphore, Lock
 from kafka import KafkaProducer
+from kafka.errors import KafkaTimeoutError
+import lorem
 
+# ---- Config ----
 DEFAULT_MESSAGE_COUNT = 128_000
 DEFAULT_TOPIC_COUNT = 10
-
 MESSAGE_SIZES = [1024, 4500, 4800, 5000, 4116]
+BATCH_SIZE = 100  # Messages per batch
+MAX_RETRIES = 5
 PROG_NAME = os.path.basename(__file__)
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s:%(name)s:%(message)s',
-    datefmt='%Y-%m-%dT%H:%M:%S',
-)
+# ---- Logging ----
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(name)s:%(message)s',
+                    datefmt='%Y-%m-%dT%H:%M:%S')
 logger = logging.getLogger(PROG_NAME)
 logger.setLevel(logging.INFO)
 
-
-def safe_send(topic, key, value):
-    try:
-        future = producer.send(topic, key=key, value=value)
-        future.get(timeout=10)  # Blocks until acked or error
-    except Exception as e:
-        logger.error(f"Failed to send message to {topic}: {e}")
-
-
-parser = argparse.ArgumentParser(
-    prog=PROG_NAME,
-    description=__doc__
-)
+# ---- CLI ----
+parser = argparse.ArgumentParser(prog=PROG_NAME, description=__doc__)
 parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
 args = parser.parse_args()
-
 if args.debug:
     logger.setLevel(logging.DEBUG)
-
 logger.info(f'Log level is {logging.getLevelName(logger.getEffectiveLevel())}.')
-executor = ThreadPoolExecutor(max_workers=8)
 
+# ---- Kafka Producer ----
 producer = KafkaProducer(
     bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP').split(','),
     security_protocol='SASL_SSL',
@@ -57,33 +45,35 @@ producer = KafkaProducer(
     sasl_plain_password=os.getenv('KAFKA_PASSWORD'),
     ssl_check_hostname=False,
     ssl_cafile='certs/ca.crt',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8'),  # ← Fixed here
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
     key_serializer=lambda k: k.encode('utf-8'),
-    linger_ms=20,
-    batch_size=65536
+    linger_ms=5,
+    batch_size=32768,
+    compression_type='snappy',
+    max_in_flight_requests_per_connection=10,
+    buffer_memory=33554432,
+    retries=MAX_RETRIES,
+    retry_backoff_ms=500,
+    max_block_ms=300000,
+    request_timeout_ms=60000,
+    acks=1
 )
 
-start_time = time.time()
-last_report_time = start_time
-last_reported_percentage = 0
+# ---- State Tracking ----
+semaphore = BoundedSemaphore(500)
+executor = ThreadPoolExecutor(max_workers=100)
+futures = []
+failed = 0
+submitted = 0
+failed_lock = Lock()
+submitted_lock = Lock()
 uk_record_number = randrange(DEFAULT_MESSAGE_COUNT)
 
-for i in range(DEFAULT_MESSAGE_COUNT):
-    create_timestamp = datetime \
-        .datetime \
-        .now(datetime.UTC) \
-        .isoformat() \
-        .replace('+00:00', 'Z')
-    topic_number = i % DEFAULT_TOPIC_COUNT
-    topic_name = f'topic.{topic_number}'
-    message_size = MESSAGE_SIZES[i % 5]
-
-    if i == uk_record_number:
-        country = 'UK'
-    elif i % 2 == 0:
-        country = 'GB'
-    else:
-        country = 'IE'
+# ---- Helpers ----
+def generate_message(i):
+    create_timestamp = datetime.datetime.now(datetime.UTC).isoformat().replace('+00:00', 'Z')
+    country = 'UK' if i == uk_record_number else ('GB' if i % 2 == 0 else 'IE')
+    message_size = MESSAGE_SIZES[i % len(MESSAGE_SIZES)]
 
     record = {
         'create_timestamp': create_timestamp,
@@ -92,36 +82,68 @@ for i in range(DEFAULT_MESSAGE_COUNT):
         'text': lorem.sentence(),
         'payload': ''
     }
+
     json_record = json.dumps(record)
     payload_size = message_size - len(json_record)
-    payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))  # nosec B311
+    payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))
     record['payload'] = payload
-    message = json.dumps(record)
+    return record
 
-    logger.debug(f'{len(message)} - {message}')
-    executor.submit(safe_send, topic_name, str(i), record)
+def send_batch(topic, messages):
+    global failed, submitted
+    with semaphore:
+        for msg in messages:
+            retries = 0
+            key = str(msg['message_number'])
+            while retries < MAX_RETRIES:
+                try:
+                    future = producer.send(topic, key=key, value=msg)
+                    with submitted_lock:
+                        submitted += 1
+                    futures.append(future)
+                    break
+                except KafkaTimeoutError as e:
+                    retries += 1
+                    time.sleep(1)
+                    logger.warning(f"Retry {retries}/{MAX_RETRIES} for {topic}:{key} — {e}")
+            else:
+                with failed_lock:
+                    failed += 1
+                logger.error(f"Permanent failure sending {key} to {topic}")
 
-    percentage_complete = round((i / DEFAULT_MESSAGE_COUNT) * 100, 0)
+# ---- Main Logic ----
+start = time.time()
+batch = []
+batch_topic = None
 
-    if percentage_complete != last_reported_percentage:
-        now = time.time()
-        elapsed = now - last_report_time
-        total_elapsed = now - start_time
-        messages_since_last = (percentage_complete - last_reported_percentage) / 100 * DEFAULT_MESSAGE_COUNT
-        tps = messages_since_last / elapsed if elapsed > 0 else 0
-        cumulative_tps = i / total_elapsed if total_elapsed > 0 else 0
+for i in range(DEFAULT_MESSAGE_COUNT):
+    topic = f'topic.{i % DEFAULT_TOPIC_COUNT}'
+    msg = generate_message(i)
 
-        logger.info(
-            f'Processed {i:,} of {DEFAULT_MESSAGE_COUNT:,} messages '
-            f'({percentage_complete}%) | '
-            f'TPS (interval): {tps:,.2f} | TPS (cumulative): {cumulative_tps:,.2f}'
-        )
+    if batch_topic is None:
+        batch_topic = topic
+    if topic != batch_topic or len(batch) >= BATCH_SIZE:
+        executor.submit(send_batch, batch_topic, batch[:])
+        batch = []
+        batch_topic = topic
 
-        last_reported_percentage = percentage_complete
-        last_report_time = now
+    batch.append(msg)
 
-flush_start = time.time()
-producer.flush()
+    if i % 1280 == 0 and i > 0:
+        elapsed = time.time() - start
+        logger.info(f"Submitted {i:,} of {DEFAULT_MESSAGE_COUNT:,} messages ({i * 100 // DEFAULT_MESSAGE_COUNT}%) | TPS: {i / elapsed:,.2f}")
+
+# Final flush
+if batch:
+    executor.submit(send_batch, batch_topic, batch)
+
 executor.shutdown(wait=True)
-flush_duration = time.time() - flush_start
-logger.info(f'Flush + executor shutdown completed in {flush_duration:.2f} seconds')
+producer.flush()
+
+# ---- Final Checks ----
+duration = time.time() - start
+if failed > 0 or submitted != DEFAULT_MESSAGE_COUNT:
+    logger.critical(f"{failed} messages failed. {submitted} successfully submitted.")
+    raise RuntimeError("Message loss detected.")
+else:
+    logger.info(f"All {submitted:,} messages sent successfully in {duration:.2f}s | Final TPS: {submitted / duration:,.2f}")

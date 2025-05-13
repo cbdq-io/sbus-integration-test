@@ -67,7 +67,9 @@ KafkaClient {
 _EOF
 ```
 
-New pre-load the data into Kafka:
+New pre-load the data into Kafka (please note that some alarming warnings
+may be shown in the logs however, if the final message confirms the
+expected number of records have been loaded, all is OK):
 
 ```shell
 ./data_gen.py
