@@ -11,7 +11,7 @@ variable "kafka_password" {
 
 variable "kc_image" {
   description = "The Kafka Connect image and tag."
-  default     = "ghcr.io/cbdq-io/kc-connectors:latest"
+  default     = "ghcr.io/cbdq-io/kc-connectors:0.4.1"
   type        = string
 }
 
