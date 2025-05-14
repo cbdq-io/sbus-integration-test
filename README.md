@@ -88,10 +88,10 @@ export SBNS_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw sb
 export ST_CONNECTION_STRING=$( terraform -chdir=terraform/azure output -raw st_connection_string )
 ```
 
-Finally, to start the archivist and router, run:
+Finally, to start the router, run:
 
 ```shell
-docker compose up -d archivist router
+docker compose up -d router
 ```
 
 Use the following KCL query in Log Analytics to track how many records are being transferred:

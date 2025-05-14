@@ -1,3 +1,9 @@
+variable "archivist_image" {
+  description = "The archivist image and tag."
+  default     = "ghcr.io/cbdq-io/archivist:latest"
+  type        = string
+}
+
 variable "kafka_bootstrap" {
   description = "The bootstrap server(s) for Kafka."
   type        = string

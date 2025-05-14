@@ -232,3 +232,50 @@ resource "azurerm_container_group" "kafka_connect" {
     }
   }
 }
+
+resource "azurerm_container_group" "archivist" {
+  name                = "archivist"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  os_type             = "Linux"
+
+  ip_address_type = "Public"
+  dns_name_label  = "archivist-${random_integer.numeric_suffix.result}"
+  restart_policy  = "OnFailure"
+
+  container {
+    name     = "archivist"
+    image    = var.archivist_image
+    cpu      = "1.0"
+    memory   = "2.0"
+    commands = ["/home/site/wwwroot/app.py"]
+
+    ports {
+      port     = 8000
+      protocol = "TCP"
+    }
+
+    environment_variables = {
+      CONTAINER_NAME           = "landing-archive"
+      LOG_LEVEL                = "INFO"
+      MAX_MESSAGES_IN_BATCH    = "1000"
+      PATH_FORMAT              = "year=YYYY/month=MM/day=dd/hour=HH/minute=mm"
+      TOPICS_AND_SUBSCRIPTIONS = "landing.topic.0:archivist,landing.topic.1:archivist,landing.topic.2:archivist,landing.topic.3:archivist,landing.topic.4:archivist,landing.topic.5:archivist,landing.topic.6:archivist,landing.topic.7:archivist,landing.topic.8:archivist,landing.topic.9:archivist"
+      TOPICS_DIR               = "topics"
+      WAIT_TIME_SECONDS        = "15"
+    }
+
+    secure_environment_variables = {
+      SERVICE_BUS_CONNECTION_STRING     = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
+      STORAGE_ACCOUNT_CONNECTION_STRING = azurerm_storage_account.st.primary_connection_string
+    }
+  }
+
+  diagnostics {
+    log_analytics {
+      log_type      = "ContainerInsights"
+      workspace_id  = azurerm_log_analytics_workspace.log.workspace_id
+      workspace_key = azurerm_log_analytics_workspace.log.primary_shared_key
+    }
+  }
+}
