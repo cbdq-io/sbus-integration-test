@@ -279,3 +279,51 @@ resource "azurerm_container_group" "archivist" {
     }
   }
 }
+
+resource "azurerm_container_group" "router" {
+  name                = "router"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  os_type             = "Linux"
+
+  ip_address_type = "Public"
+  dns_name_label  = "router-${random_integer.numeric_suffix.result}"
+  restart_policy  = "OnFailure"
+
+  dynamic "container" {
+    for_each = toset([for i in range(var.router_instance_count) : tostring(i)])
+    content {
+      name     = "router-${container.key}"
+      image    = var.router_image
+      cpu      = "1.0"
+      memory   = "2.0"
+      commands = ["/home/appuser/router.py"]
+
+      ports {
+        port     = 8000 + tonumber(container.key)
+        protocol = "TCP"
+      }
+
+      environment_variables = {
+        LOG_LEVEL              = "INFO"
+        ROUTER_CUSTOM_SENDER   = "custom:custom_sender"
+        ROUTER_MAX_TASKS       = "2"
+        ROUTER_PROMETHEUS_PORT = tostring(8000 + tonumber(container.key))
+      }
+
+      secure_environment_variables = {
+        ROUTER_NAMESPACE_GB_CONNECTION_STRING = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
+        ROUTER_NAMESPACE_IE_CONNECTION_STRING = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
+        ROUTER_SOURCE_CONNECTION_STRING       = data.azurerm_servicebus_namespace.sbns.default_primary_connection_string
+      }
+    }
+  }
+
+  diagnostics {
+    log_analytics {
+      log_type      = "ContainerInsights"
+      workspace_id  = azurerm_log_analytics_workspace.log.workspace_id
+      workspace_key = azurerm_log_analytics_workspace.log.primary_shared_key
+    }
+  }
+}
