@@ -6,13 +6,11 @@ import json
 import logging
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor
 from random import choice, randrange
 from string import ascii_uppercase
-from threading import BoundedSemaphore, Lock
-from kafka import KafkaProducer
-from kafka.errors import KafkaTimeoutError
+
 import lorem
+from confluent_kafka import Producer, Message, KafkaError
 
 # ---- Config ----
 DEFAULT_MESSAGE_COUNT = 128_000
@@ -32,44 +30,55 @@ logger.setLevel(logging.INFO)
 parser = argparse.ArgumentParser(prog=PROG_NAME, description=__doc__)
 parser.add_argument('-d', '--debug', help='Run in debug mode.', action='store_true')
 args = parser.parse_args()
+
 if args.debug:
     logger.setLevel(logging.DEBUG)
+
 logger.info(f'Log level is {logging.getLevelName(logger.getEffectiveLevel())}.')
+payloads = {}
 
 # ---- Kafka Producer ----
-producer = KafkaProducer(
-    bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP').split(','),
-    security_protocol='SASL_SSL',
-    sasl_mechanism='SCRAM-SHA-512',
-    sasl_plain_username='sbox',
-    sasl_plain_password=os.getenv('KAFKA_PASSWORD'),
-    ssl_check_hostname=False,
-    ssl_cafile='certs/ca.crt',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-    key_serializer=lambda k: k.encode('utf-8'),
-    linger_ms=5,
-    batch_size=32768,
-    compression_type='snappy',
-    max_in_flight_requests_per_connection=10,
-    buffer_memory=33554432,
-    retries=MAX_RETRIES,
-    retry_backoff_ms=500,
-    max_block_ms=300000,
-    request_timeout_ms=60000,
-    acks=1
-)
+conf = {
+    'bootstrap.servers': os.getenv('KAFKA_BOOTSTRAP'),
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanisms': 'SCRAM-SHA-512',
+    'sasl.username': 'sbox',
+    'sasl.password': os.getenv('KAFKA_PASSWORD'),
+    'ssl.ca.location': './certs/ca.crt',
+    'enable.ssl.certificate.verification': False,
 
-# ---- State Tracking ----
-semaphore = BoundedSemaphore(500)
-executor = ThreadPoolExecutor(max_workers=100)
-futures = []
-failed = 0
-submitted = 0
-failed_lock = Lock()
-submitted_lock = Lock()
+    # Reliability
+    'acks': '1',  # or 'all' for strongest delivery guarantee
+    'retries': MAX_RETRIES,
+    'retry.backoff.ms': 500,
+
+    # Performance
+    'linger.ms': 10,              # small delay to allow batching
+    'batch.num.messages': 1000,   # max messages per batch
+    'queue.buffering.max.kbytes': 10240,  # default 4MB, increase if needed
+    'queue.buffering.max.messages': 100000,
+    'message.send.max.retries': 5,
+    'compression.type': 'snappy',
+
+    # Timeouts
+    'request.timeout.ms': 60000,
+    'delivery.timeout.ms': 120000,  # total time to deliver before error
+}
+producer = Producer(conf)
+
 uk_record_number = randrange(DEFAULT_MESSAGE_COUNT)
+submitted = 0
 
-# ---- Helpers ----
+
+def delivery_report(err, msg):
+    global submitted
+
+    if err is not None:
+        logger.error(f"Message delivery failed: {err}")
+    else:
+        submitted += 1
+
+
 def generate_message(i):
     create_timestamp = datetime.datetime.now(datetime.UTC).isoformat().replace('+00:00', 'Z')
     country = 'UK' if i == uk_record_number else ('GB' if i % 2 == 0 else 'IE')
@@ -85,65 +94,48 @@ def generate_message(i):
 
     json_record = json.dumps(record)
     payload_size = message_size - len(json_record)
-    payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))
+
+    if payload_size in payloads:
+        payload = payloads[payload_size]
+    else:
+        payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))
+        payloads[payload_size] = payload
+
     record['payload'] = payload
     return record
 
-def send_batch(topic, messages):
-    global failed, submitted
-    with semaphore:
-        for msg in messages:
-            retries = 0
-            key = str(msg['message_number'])
-            while retries < MAX_RETRIES:
-                try:
-                    future = producer.send(topic, key=key, value=msg)
-                    with submitted_lock:
-                        submitted += 1
-                    futures.append(future)
-                    break
-                except KafkaTimeoutError as e:
-                    retries += 1
-                    time.sleep(1)
-                    logger.warning(f"Retry {retries}/{MAX_RETRIES} for {topic}:{key} — {e}")
-            else:
-                with failed_lock:
-                    failed += 1
-                logger.error(f"Permanent failure sending {key} to {topic}")
 
 # ---- Main Logic ----
 start = time.time()
-batch = []
-batch_topic = None
 
 for i in range(DEFAULT_MESSAGE_COUNT):
     topic = f'topic.{i % DEFAULT_TOPIC_COUNT}'
     msg = generate_message(i)
 
-    if batch_topic is None:
-        batch_topic = topic
-    if topic != batch_topic or len(batch) >= BATCH_SIZE:
-        executor.submit(send_batch, batch_topic, batch[:])
-        batch = []
-        batch_topic = topic
+    while True:
+        try:
+            producer.produce(
+                topic=topic,
+                key=str(i),
+                value=json.dumps(msg),
+                callback=delivery_report
+            )
+            break  # success
+        except BufferError:
+            producer.poll(0.1)  # Wait and clear events
+        except Exception as e:
+            logger.error(f"Produce failed for message {i}: {e}")
+            break
 
-    batch.append(msg)
-
-    if i % 1280 == 0 and i > 0:
+    if i % 1000 == 0 and i > 0:
+        producer.poll(0)
         elapsed = time.time() - start
         logger.info(f"Submitted {i:,} of {DEFAULT_MESSAGE_COUNT:,} messages ({i * 100 // DEFAULT_MESSAGE_COUNT}%) | TPS: {i / elapsed:,.2f}")
 
-# Final flush
-if batch:
-    executor.submit(send_batch, batch_topic, batch)
-
-executor.shutdown(wait=True)
-producer.flush()
-
-# ---- Final Checks ----
+producer.flush(timeout=60)
 duration = time.time() - start
-if failed > 0 or submitted != DEFAULT_MESSAGE_COUNT:
-    logger.critical(f"{failed} messages failed. {submitted} successfully submitted.")
-    raise RuntimeError("Message loss detected.")
-else:
+
+if submitted == DEFAULT_MESSAGE_COUNT:
     logger.info(f"All {submitted:,} messages sent successfully in {duration:.2f}s | Final TPS: {submitted / duration:,.2f}")
+else:
+    logger.error(f'There were {DEFAULT_MESSAGE_COUNT:,} messages sent, but only {submitted:,} were acknowledged.')
