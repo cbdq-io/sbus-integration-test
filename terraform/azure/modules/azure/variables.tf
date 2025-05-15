@@ -26,6 +26,18 @@ variable "location" {
   type        = string
 }
 
+variable "router_image" {
+  description = "The sbus-router image and tag."
+  default     = "ghcr.io/cbdq-io/router:latest"
+  type        = string
+}
+
+variable "router_instance_count" {
+  description = "The number of instances of the sbus-router to deploy."
+  default     = "2"
+  type        = number
+}
+
 variable "sbns_capacity" {
   description = "The capacity for the Azure Service Bus namespace."
   type        = number

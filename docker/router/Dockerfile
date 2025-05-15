@@ -1,4 +1,4 @@
-FROM router:latest
+FROM ghcr.io/cbdq-io/sbus-router:0.5.1
 
 COPY --chown=appuser:appuser custom.py /home/appuser/custom.py
 
