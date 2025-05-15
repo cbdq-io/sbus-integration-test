@@ -21,7 +21,6 @@ resource "azurerm_servicebus_topic" "sbt_landing" {
   count = var.topic_count
 
   name                          = "landing.topic.${count.index}"
-  auto_delete_on_idle           = "P14D"
   namespace_id                  = azurerm_servicebus_namespace.sbns.id
   max_message_size_in_kilobytes = null
   partitioning_enabled          = false
@@ -48,7 +47,6 @@ resource "azurerm_servicebus_topic" "sbt" {
   count = var.topic_count
 
   name                 = "routed.topic.${count.index}"
-  auto_delete_on_idle  = "P14D"
   namespace_id         = azurerm_servicebus_namespace.sbns.id
   partitioning_enabled = false
 }
