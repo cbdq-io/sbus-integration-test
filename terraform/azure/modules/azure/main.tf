@@ -296,7 +296,7 @@ resource "azurerm_container_group" "router" {
     content {
       name     = "router-${container.key}"
       image    = var.router_image
-      cpu      = "0.5"
+      cpu      = "0.25"
       memory   = "1.0"
       commands = ["/home/appuser/router.py"]
 
@@ -308,7 +308,7 @@ resource "azurerm_container_group" "router" {
       environment_variables = {
         LOG_LEVEL              = "INFO"
         ROUTER_CUSTOM_SENDER   = "custom:custom_sender"
-        ROUTER_MAX_TASKS       = "5"
+        ROUTER_MAX_TASKS       = "8"
         ROUTER_PROMETHEUS_PORT = tostring(8000 + tonumber(container.key))
       }
 
