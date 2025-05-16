@@ -34,7 +34,7 @@ variable "router_image" {
 
 variable "router_instance_count" {
   description = "The number of instances of the sbus-router to deploy."
-  default     = "3"
+  default     = "10"
   type        = number
 }
 
