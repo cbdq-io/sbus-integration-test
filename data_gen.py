@@ -5,6 +5,7 @@ import datetime
 import json
 import logging
 import os
+import sys
 import time
 from random import choice, randrange
 from string import ascii_uppercase
@@ -46,6 +47,7 @@ conf = {
     'sasl.password': os.getenv('KAFKA_PASSWORD'),
     'ssl.ca.location': './certs/ca.crt',
     'enable.ssl.certificate.verification': False,
+    'message.max.bytes': 4194304,
 
     # Reliability
     'acks': '1',  # or 'all' for strongest delivery guarantee
@@ -58,7 +60,7 @@ conf = {
     'queue.buffering.max.kbytes': 10240,  # default 4MB, increase if needed
     'queue.buffering.max.messages': 100000,
     'message.send.max.retries': 5,
-    'compression.type': 'snappy',
+    'compression.type': 'none',
 
     # Timeouts
     'request.timeout.ms': 60000,
@@ -95,7 +97,11 @@ def generate_message(i):
     json_record = json.dumps(record)
     payload_size = message_size - len(json_record)
 
-    if payload_size in payloads:
+    if country == 'UK':
+        logger.info('Creating large random message')
+        payload_size = 3_750_000
+        payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))
+    elif payload_size in payloads:
         payload = payloads[payload_size]
     else:
         payload = ''.join(choice(ascii_uppercase) for _ in range(payload_size))
@@ -139,3 +145,4 @@ if submitted == DEFAULT_MESSAGE_COUNT:
     logger.info(f"All {submitted:,} messages sent successfully in {duration:.2f}s | Final TPS: {submitted / duration:,.2f}")
 else:
     logger.error(f'There were {DEFAULT_MESSAGE_COUNT:,} messages sent, but only {submitted:,} were acknowledged.')
+    sys.exit(1)

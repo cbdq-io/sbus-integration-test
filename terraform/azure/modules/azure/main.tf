@@ -22,7 +22,7 @@ resource "azurerm_servicebus_topic" "sbt_landing" {
 
   name                          = "landing.topic.${count.index}"
   namespace_id                  = azurerm_servicebus_namespace.sbns.id
-  max_message_size_in_kilobytes = null
+  max_message_size_in_kilobytes = 4096
   partitioning_enabled          = false
 }
 
@@ -46,9 +46,10 @@ resource "azurerm_servicebus_subscription" "sbts_archivist" {
 resource "azurerm_servicebus_topic" "sbt" {
   count = var.topic_count
 
-  name                 = "routed.topic.${count.index}"
-  namespace_id         = azurerm_servicebus_namespace.sbns.id
-  partitioning_enabled = false
+  name                          = "routed.topic.${count.index}"
+  max_message_size_in_kilobytes = 4096
+  namespace_id                  = azurerm_servicebus_namespace.sbns.id
+  partitioning_enabled          = false
 }
 
 resource "azurerm_servicebus_subscription" "client" {
