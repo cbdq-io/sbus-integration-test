@@ -100,9 +100,11 @@ resource "kubernetes_manifest" "kafka_sbox" {
           "queued.max.requests"                      = 5000
           "transaction.state.log.min.isr"            = 1
           "transaction.state.log.replication.factor" = 2
-          "replica.fetch.max.bytes"                  = 1048576
+          "replica.fetch.max.bytes"                  = 4194352
           "num.replica.fetchers"                     = 4
           "log.retention.hours"                      = 6
+          "message.max.bytes"                        = 4194352
+          "socket.request.max.bytes"                 = 5242880
         }
         "listeners" = [
           {
@@ -250,6 +252,9 @@ resource "kubernetes_manifest" "kafkatopic_topics" {
       "namespace" = var.ns_name
     }
     "spec" = {
+      "config" = {
+        "max.message.bytes" = "4096000"
+      }
       "partitions" = 8
       "replicas"   = 2
     }
