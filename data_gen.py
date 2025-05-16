@@ -14,7 +14,7 @@ import lorem
 from confluent_kafka import Producer, Message, KafkaError
 
 # ---- Config ----
-DEFAULT_MESSAGE_COUNT = 128_000
+DEFAULT_MESSAGE_COUNT = 1_000_000
 DEFAULT_TOPIC_COUNT = 10
 MESSAGE_SIZES = [1024, 4500, 4800, 5000, 4116]
 BATCH_SIZE = 100  # Messages per batch

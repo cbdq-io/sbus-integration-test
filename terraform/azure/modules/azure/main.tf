@@ -280,13 +280,14 @@ resource "azurerm_container_group" "archivist" {
 }
 
 resource "azurerm_container_group" "router" {
-  name                = "router"
+  count               = 2
+  name                = "router-${count.index}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
 
   ip_address_type = "Public"
-  dns_name_label  = "router-${random_integer.numeric_suffix.result}"
+  dns_name_label  = "router-${random_integer.numeric_suffix.result}-${count.index}"
   restart_policy  = "OnFailure"
 
   dynamic "container" {
@@ -294,8 +295,8 @@ resource "azurerm_container_group" "router" {
     content {
       name     = "router-${container.key}"
       image    = var.router_image
-      cpu      = "1.0"
-      memory   = "2.0"
+      cpu      = "0.5"
+      memory   = "1.0"
       commands = ["/home/appuser/router.py"]
 
       ports {
@@ -306,7 +307,7 @@ resource "azurerm_container_group" "router" {
       environment_variables = {
         LOG_LEVEL              = "INFO"
         ROUTER_CUSTOM_SENDER   = "custom:custom_sender"
-        ROUTER_MAX_TASKS       = "2"
+        ROUTER_MAX_TASKS       = "5"
         ROUTER_PROMETHEUS_PORT = tostring(8000 + tonumber(container.key))
       }
 
