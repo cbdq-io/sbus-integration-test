@@ -11,7 +11,7 @@ variable "kafka_password" {
 
 variable "sbns_capacity" {
   description = "The capacity for the Azure Service Bus namespace."
-  default     = 1
+  default     = 2
   type        = number
 }
 
