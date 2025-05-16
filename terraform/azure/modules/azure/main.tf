@@ -196,6 +196,7 @@ resource "azurerm_container_group" "kafka_connect" {
     environment_variables = {
       CONNECTOR_AzureServiceBusSink_CONNECTOR_CLASS                                         = "io.cbdq.AzureServiceBusSinkConnector"
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_AUTO_OFFSET_RESET                     = "earliest"
+      CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_MAX_POLL_RECORDS                      = "100"
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SASL_MECHANISM                        = "SCRAM-SHA-512"
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SECURITY_PROTOCOL                     = "SASL_SSL"
       CONNECTOR_AzureServiceBusSink_CONSUMER_OVERRIDE_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM = ""
